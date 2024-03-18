@@ -273,7 +273,8 @@ const Expense = () => {
                 </button>
               </div>
               <div>
-                Page {totalPage === 0 ? 0 : currentExpense} of {totalPage}
+                Page {totalPage === 0 ? 0 : currentExpense} of
+                {totalPage}
               </div>
             </div>
           </div>

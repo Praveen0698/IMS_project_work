@@ -4,6 +4,8 @@ import NavBar from "../NavBar";
 import SideBar from "../SideBar";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import noDataImg from "../../assets/nodata.png";
+
 const Cash = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [itemData, setItemData] = useState([]);
@@ -64,18 +66,20 @@ const Cash = () => {
     return totalSalesAmount - totalExpenseAmount;
   };
 
+  const mergedData = [...getSalesData, ...itemData];
+
   const totalAmount = calculateTotalAmount();
   const totalColor = totalAmount >= 0 ? "green" : "red";
   const totalSign = totalAmount >= 0 ? "+" : "-";
 
   const indexOfLastSalesItem = currentSalesPage * itemsPerSalesPage;
   const indexOfFirstSalesItem = indexOfLastSalesItem - itemsPerSalesPage;
-  const currentSalesItems = getSalesData.slice(
+  const currentSalesItems = mergedData.slice(
     indexOfFirstSalesItem,
     indexOfLastSalesItem
   );
 
-  const totalSalesPages = Math.ceil(getSalesData.length / itemsPerSalesPage);
+  const totalSalesPages = Math.ceil(mergedData.length / itemsPerSalesPage);
 
   const nextSalesPage = () => {
     setcurrentSalesPage(currentSalesPage + 1);
@@ -87,13 +91,13 @@ const Cash = () => {
 
   const getItemData = async () => {
     await axios
-      .get("http://localhost:3500/accounts/expense")
+      .get("http://13.232.72.106:3500/accounts/expense")
       .then((result) => setItemData(result.data))
       .catch((err) => console.log(err));
   };
 
   const getSales = async () => {
-    const result = await axios.get("http://localhost:3500/sales");
+    const result = await axios.get("http://13.232.72.106:3500/sales");
     setGetSalesData(result.data);
   };
 
@@ -203,92 +207,84 @@ const Cash = () => {
                     </p>
                   </div>
                 </div>
-                <div className="table-wrapper">
-                  {" "}
-                  <table className="table table-bordered ">
-                    <div id="table-responsive" className="table-responsive">
-                      <table
-                        id="table"
-                        className="table table-hover table-striped text-nowrap table-vcenter mb-0"
-                      >
-                        <thead>
-                          <tr>
-                            <th>Sl No</th>
-                            <th>NAME</th>
-                            <th>TYPE</th>
-                            <th>ITEMS PURCHASED</th>
-                            <th>DATE</th>
-                            <th>AMOUNT</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {itemData.map((expense, index) => (
-                            <tr key={index}>
-                              <td>{index + 1}</td>
-                              <td>{expense.vendorName}</td>
-                              <td>{expense.expenseCategory}</td>
-                              <td>{expense.items}</td>
-                              <td>{expense.billDate}</td>
-                              <td>
-                                {expense.purchasePrice ? (
-                                  <span style={{ color: "red" }}>
-                                    - ₹ {expense.purchasePrice}
-                                  </span>
-                                ) : (
-                                  "-"
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-
-                        <tbody>
-                          {currentSalesItems.map((item, index) => (
-                            <tr key={index} style={{ cursor: "pointer" }}>
-                              <td>{index + indexOfFirstSalesItem + 1}</td>
-                              <td>{item.customerName}</td>
-                              <td>{item.method}</td>
-                              <td>{itemNamesString}</td>
-                              <td>{item.salesOrderDate}</td>
-                              <td>
-                                {item.totalAmount ? (
-                                  <span style={{ color: "green" }}>
-                                    + ₹ {item.totalAmount}
-                                  </span>
-                                ) : (
-                                  "-"
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <div>
-                        <button
-                          className="buyer-page-btn"
-                          onClick={prevSalesPage}
-                          disabled={currentSalesPage === 1}
+                {getSalesData.length > 0 || itemData.length > 0 ? (
+                  <div className="table-wrapper">
+                    {" "}
+                    <table
+                      className="table table-bordered "
+                      style={{ height: "40vh" }}
+                    >
+                      <div id="table-responsive" className="table-responsive">
+                        <table
+                          id="table"
+                          className="table table-hover table-striped text-nowrap table-vcenter mb-0"
                         >
-                          Previous
-                        </button>
-                        <button
-                          className="buyer-page-btn"
-                          onClick={nextSalesPage}
-                          disabled={
-                            currentSalesPage === totalSalesPages ||
-                            totalSalesPages === 0
-                          }
-                        >
-                          Next
-                        </button>
+                          <thead>
+                            <tr>
+                              <th>Sl No</th>
+                              <th>NAME</th>
+                              <th>TYPE</th>
+                              <th>ITEMS PURCHASED</th>
+                              <th>DATE</th>
+                              <th>AMOUNT</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentSalesItems.map((item, index) => (
+                              <tr key={index}>
+                                <td>{index + indexOfFirstSalesItem + 1}</td>
+                                <td>{item.customerName || item.vendorName}</td>
+                                <td>{item.expenseCategory || item.method}</td>
+                                <td>{item.items || itemNamesString}</td>
+                                <td>{item.billDate || item.salesOrderDate}</td>
+                                <td>
+                                  {item.purchasePrice ? (
+                                    <span style={{ color: "red" }}>
+                                      - ₹ {item.purchasePrice}
+                                    </span>
+                                  ) : "" || item.totalAmount ? (
+                                    <span style={{ color: "green" }}>
+                                      + ₹ {item.totalAmount}
+                                    </span>
+                                  ) : (
+                                    ""
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                      <div>
-                        Page {totalSalesPages === 0 ? 0 : currentSalesPage} of{" "}
-                        {totalSalesPages}
-                      </div>
-                    </div>
-                  </table>{" "}
-                </div>
+                    </table>{" "}
+                  </div>
+                ) : (
+                  <div style={{ width: "100%", textAlign: "center" }}>
+                    <img src={noDataImg} alt="no-data" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <button
+                  className="buyer-page-btn"
+                  onClick={prevSalesPage}
+                  disabled={currentSalesPage === 1}
+                >
+                  Previous
+                </button>
+                <button
+                  className="buyer-page-btn"
+                  onClick={nextSalesPage}
+                  disabled={
+                    currentSalesPage === totalSalesPages ||
+                    totalSalesPages === 0
+                  }
+                >
+                  Next
+                </button>
+              </div>
+              <div>
+                Page {totalSalesPages === 0 ? 0 : currentSalesPage} of
+                {totalSalesPages}
               </div>
             </div>
           </div>
